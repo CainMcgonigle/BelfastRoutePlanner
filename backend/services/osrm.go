@@ -62,10 +62,11 @@ func SnapToRoads(waypoints [][2]float64) [][2]float64 {
 
 // OSRMAvailable returns true if the OSRM service is reachable.
 func OSRMAvailable() bool {
-	resp, err := http.Get(osrmBase + "/health")
+	// Use a nearest request on Belfast city centre as a liveness check
+	resp, err := http.Get(osrmBase + "/nearest/v1/driving/-5.9301,54.5973")
 	if err != nil {
 		return false
 	}
 	resp.Body.Close()
-	return resp.StatusCode == 200
+	return true
 }

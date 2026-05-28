@@ -10,11 +10,13 @@ data/cif/*.cif
 data/stops.json
 data/translink-stops.geojson
 
-# OTP
+# OTP + OSRM graph files
 *.jar
 otp/graphs/ni/*.pbf
 otp/graphs/ni/*.zip
 otp/graphs/ni/Graph.obj
+otp/graphs/ni/*.osrm
+otp/graphs/ni/*.osrm.*
 !otp/graphs/ni/.gitkeep
 
 # Env
