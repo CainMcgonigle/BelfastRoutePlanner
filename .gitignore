@@ -5,6 +5,9 @@ backend/transit-ni
 *.test
 *.out
 
+# CIF timetable data (place files in data/cif/ manually)
+data/cif/*.cif
+
 # OTP
 *.jar
 otp/graphs/ni/*.pbf
@@ -16,6 +19,11 @@ otp/graphs/ni/Graph.obj
 .env
 .env.local
 
+# Next.js
+frontend/.next/
+frontend/node_modules/
+frontend/next-env.d.ts
+
 # IDE
 .vscode/
 .idea/
@@ -23,3 +31,4 @@ otp/graphs/ni/Graph.obj
 # OS
 .DS_Store
 Thumbs.db
+*Zone.Identifier
