@@ -79,11 +79,23 @@ fi
 echo ""
 echo "All data present. Building OTP graph (this takes a few minutes)..."
 java -Xmx2G -jar "$OTP_JAR" --build --save "$GRAPH_DIR"
+echo "OTP graph built."
+
+# --- Build OSRM graph (for road-snapped route lines) ---
+echo ""
+echo "Building OSRM road graph for Northern Ireland..."
+if ! command -v docker &>/dev/null; then
+    echo "Docker not found, skipping OSRM build. Run docker compose up to build it later."
+else
+    docker run -t -v "$GRAPH_DIR:/data" ghcr.io/project-osrm/osrm-backend:latest \
+        osrm-extract -p /opt/car.lua /data/northern-ireland-latest.osm.pbf
+    docker run -t -v "$GRAPH_DIR:/data" ghcr.io/project-osrm/osrm-backend:latest \
+        osrm-partition /data/northern-ireland-latest.osrm
+    docker run -t -v "$GRAPH_DIR:/data" ghcr.io/project-osrm/osrm-backend:latest \
+        osrm-customize /data/northern-ireland-latest.osrm
+    echo "OSRM graph built."
+fi
 
 echo ""
-echo "Graph built successfully."
-echo "Start OTP with:"
-echo "  java -Xmx2G -jar $OTP_JAR --load --serve $GRAPH_DIR"
-echo ""
-echo "Or via Docker Compose from the repo root:"
+echo "Setup complete. Start everything with:"
 echo "  docker compose up"

@@ -3,6 +3,8 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
+	"unicode"
 
 	"transit-ni/services"
 )
@@ -25,16 +27,19 @@ type geojsonCollection struct {
 
 func GetRoutesGeoJSON(w http.ResponseWriter, r *http.Request) {
 	data := services.GetCIFData()
+	snapRoads := services.OSRMAvailable()
 	features := []geojsonFeature{}
 
 	for _, route := range data.Routes {
-		// use one representative journey per route to draw the line
 		if len(route.Journeys) == 0 {
 			continue
 		}
 		coords := journeyCoords(route.Journeys[0], data.Stops)
 		if len(coords) < 2 {
 			continue
+		}
+		if snapRoads {
+			coords = services.SnapToRoads(coords)
 		}
 		features = append(features, geojsonFeature{
 			Type: "Feature",
@@ -43,6 +48,7 @@ func GetRoutesGeoJSON(w http.ResponseWriter, r *http.Request) {
 				"description": route.Description,
 				"operator":    route.Operator,
 				"direction":   route.Direction,
+				"corridor":    corridor(route.LineID),
 			},
 			Geometry: geojsonGeometry{
 				Type:        "LineString",
@@ -55,8 +61,31 @@ func GetRoutesGeoJSON(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(geojsonCollection{Type: "FeatureCollection", Features: features})
 }
 
-// journeyCoords returns [lon, lat] pairs for stops in journey order that have coordinates.
-// Consecutive stops without coordinates break the line into separate segments.
+// corridor extracts the route prefix used for colour coding:
+// "9A" → "9", "12B" → "12", "G1" → "G1", "N9" → "N9"
+func corridor(lineID string) string {
+	s := strings.TrimSpace(lineID)
+	if s == "" {
+		return "other"
+	}
+	// Glider and Night services keep their full prefix
+	if strings.HasPrefix(s, "G") || strings.HasPrefix(s, "N") {
+		return s[:2]
+	}
+	// Extract leading digits
+	end := 0
+	for _, c := range s {
+		if !unicode.IsDigit(c) {
+			break
+		}
+		end++
+	}
+	if end == 0 {
+		return s
+	}
+	return s[:end]
+}
+
 func journeyCoords(journey services.CIFJourney, stops map[string]*services.CIFStop) [][2]float64 {
 	coords := [][2]float64{}
 	for _, st := range journey.StopTimes {

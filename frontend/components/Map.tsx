@@ -17,18 +17,38 @@ const osmLayer: RasterLayer = {
   maxzoom: 19,
 }
 
+const CORRIDOR_COLOURS: Record<string, string> = {
+  '1':  '#f97316', // orange
+  '2':  '#dc2626', // red
+  '3':  '#06b6d4', // turquoise
+  '4':  '#7c2d3e', // brownish maroon
+  '5':  '#0d9488', // teal
+  '6':  '#4a7c59', // cactus green
+  '7':  '#a3e635', // soft lime green
+  '8':  '#7c3aed', // purple
+  '9':  '#ec4899', // pink
+  '10': '#eab308', // yellow
+  '11': '#92400e', // brown
+  '12': '#2d8fbd', // blue with green tint
+  '13': '#f472b6', // light pink
+  'G1': '#1e3a8a', // navy blue
+  'G2': '#2563eb', // blue
+}
+
+const corridorMatchExpr = [
+  'match', ['get', 'corridor'],
+  ...Object.entries(CORRIDOR_COLOURS).flatMap(([k, v]) => [k, v]),
+  '#ec4899', // default pink
+]
+
 const routeLineLayer = {
   id: 'routes',
   type: 'line' as const,
   source: 'routes',
   paint: {
-    'line-color': [
-      'match', ['get', 'operator'],
-      'GDR', '#10b981',
-      '#3b82f6',
-    ],
+    'line-color': corridorMatchExpr,
     'line-width': ['interpolate', ['linear'], ['zoom'], 10, 1.5, 15, 3],
-    'line-opacity': 0.7,
+    'line-opacity': 0.8,
   },
 }
 
