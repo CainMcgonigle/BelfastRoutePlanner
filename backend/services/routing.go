@@ -79,13 +79,33 @@ type routeWithGeom struct {
 }
 
 func computeRouteFeatures(data *CIFData) []RouteFeature {
-	// Collect one representative journey per route with (optionally) snapped coords
 	snap := OSRMAvailable()
-	var routes []routeWithGeom
-	for key, route := range data.Routes {
+
+	// Deduplicate to one representative route per corridor+direction.
+	// Pick the journey with the most located stops for best geometry.
+	type corridorKey struct{ corridor, direction string }
+	best := make(map[corridorKey]*CIFRoute)
+	bestCount := make(map[corridorKey]int)
+
+	for _, route := range data.Routes {
 		if len(route.Journeys) == 0 {
 			continue
 		}
+		ck := corridorKey{CorridorFromLine(route.LineID), route.Direction}
+		count := 0
+		for _, st := range route.Journeys[0].StopTimes {
+			if s, ok := data.Stops[st.ATCO]; ok && s.Lat != 0 {
+				count++
+			}
+		}
+		if count > bestCount[ck] {
+			best[ck] = route
+			bestCount[ck] = count
+		}
+	}
+
+	var routes []routeWithGeom
+	for ck, route := range best {
 		coords := journeyStopCoords(route.Journeys[0], data.Stops)
 		if len(coords) < 2 {
 			continue
@@ -94,8 +114,8 @@ func computeRouteFeatures(data *CIFData) []RouteFeature {
 			coords = SnapToRoads(coords)
 		}
 		routes = append(routes, routeWithGeom{
-			key:       key,
-			corridor:  CorridorFromLine(route.LineID),
+			key:       ck.corridor + ":" + ck.direction,
+			corridor:  ck.corridor,
 			lineID:    strings.TrimSpace(route.LineID),
 			operator:  route.Operator,
 			desc:      route.Description,
