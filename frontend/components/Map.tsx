@@ -45,10 +45,19 @@ const routeLineLayer = {
   id: 'routes',
   type: 'line' as const,
   source: 'routes',
+  layout: {
+    'line-cap': 'round' as const,
+    'line-join': 'round' as const,
+  },
   paint: {
     'line-color': corridorMatchExpr,
-    'line-width': ['interpolate', ['linear'], ['zoom'], 10, 1.5, 15, 3],
-    'line-opacity': 0.8,
+    'line-width': ['interpolate', ['linear'], ['zoom'], 10, 1.5, 15, 4],
+    'line-opacity': 0.85,
+    'line-offset': [
+      '*',
+      ['get', 'offsetIndex'],
+      ['interpolate', ['linear'], ['zoom'], 10, 2.5, 15, 7],
+    ],
   },
 }
 

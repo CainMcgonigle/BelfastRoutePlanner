@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/cors"
 
 	"transit-ni/handlers"
+	"transit-ni/services"
 )
 
 func main() {
@@ -26,6 +27,8 @@ func main() {
 	r.Get("/api/routes", handlers.GetRoutes)
 	r.Get("/api/routes/geojson", handlers.GetRoutesGeoJSON)
 	r.Get("/api/plan", handlers.PlanTrip)
+
+	services.WarmRouteCache()
 
 	log.Println("backend running on :8081")
 	log.Fatal(http.ListenAndServe(":8081", r))
