@@ -2,7 +2,7 @@ services:
   otp:
     image: docker.io/opentripplanner/opentripplanner:latest
     volumes:
-      - ./otp/graphs/ni:/var/opentripplanner/graphs/ni
+      - ./otp/graphs/ni:/var/opentripplanner
     ports:
       - "8080:8080"
     command: ["--load", "--serve"]
