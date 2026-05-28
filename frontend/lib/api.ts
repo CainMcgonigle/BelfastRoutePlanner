@@ -21,7 +21,7 @@ export interface OTPResponse {
 }
 
 export interface Stop {
-  id: string
+  atco: string
   name: string
   lat: number
   lon: number
