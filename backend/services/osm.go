@@ -2,7 +2,10 @@ package services
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
+	"strconv"
+	"strings"
 )
 
 type osmNode struct {
@@ -32,10 +35,7 @@ func EnrichStopsFromOSM(data *CIFData, path string) error {
 
 	matched := 0
 	for _, node := range resp.Elements {
-		atco := node.Tags["naptan:AtcoCode"]
-		if atco == "" {
-			atco = node.Tags["ref"]
-		}
+		atco := resolveATCO(node.Tags)
 		if atco == "" {
 			continue
 		}
@@ -54,4 +54,22 @@ func EnrichStopsFromOSM(data *CIFData, path string) error {
 	}
 
 	return nil
+}
+
+// resolveATCO tries naptan:AtcoCode first, then constructs from ref by
+// parsing as an integer and formatting as 700 + 9-digit zero-padded number.
+// Refs like "95" or "900;901" (route refs, not stop refs) are skipped.
+func resolveATCO(tags map[string]string) string {
+	if v := tags["naptan:AtcoCode"]; v != "" {
+		return v
+	}
+	ref := tags["ref"]
+	if ref == "" || strings.ContainsAny(ref, ";, ") {
+		return ""
+	}
+	n, err := strconv.ParseInt(ref, 10, 64)
+	if err != nil || n < 100 || n > 999999999 {
+		return ""
+	}
+	return fmt.Sprintf("700%09d", n)
 }
