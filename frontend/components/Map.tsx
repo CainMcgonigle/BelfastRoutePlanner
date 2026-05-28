@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import MapGL, { Source, Layer, Popup } from 'react-map-gl/maplibre'
 import type { RasterLayer, CircleLayer, MapMouseEvent } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
-import { getStops, type Stop } from '../lib/api'
+import { getStops, getRoutesGeoJSON, type Stop } from '../lib/api'
 
 const BELFAST_CENTER = {
   latitude: 54.5973,
@@ -18,6 +18,17 @@ const osmLayer: RasterLayer = {
   source: 'osm',
   minzoom: 0,
   maxzoom: 19,
+}
+
+const routeLineLayer = {
+  id: 'routes',
+  type: 'line' as const,
+  source: 'routes',
+  paint: {
+    'line-color': '#3b82f6',
+    'line-width': ['interpolate', ['linear'], ['zoom'], 10, 1.5, 15, 3],
+    'line-opacity': 0.7,
+  },
 }
 
 const stopCircleLayer: CircleLayer = {
@@ -54,10 +65,12 @@ interface PopupInfo {
 
 export default function Map() {
   const [stops, setStops] = useState<Stop[]>([])
+  const [routes, setRoutes] = useState<GeoJSON.FeatureCollection>({ type: 'FeatureCollection', features: [] })
   const [popup, setPopup] = useState<PopupInfo | null>(null)
 
   useEffect(() => {
     getStops().then(setStops).catch(console.error)
+    getRoutesGeoJSON().then(setRoutes).catch(console.error)
   }, [])
 
   const handleClick = useCallback((e: MapMouseEvent) => {
@@ -93,6 +106,10 @@ export default function Map() {
         attribution="&copy; OpenStreetMap contributors"
       >
         <Layer {...osmLayer} />
+      </Source>
+
+      <Source id="routes" type="geojson" data={routes}>
+        <Layer {...routeLineLayer} />
       </Source>
 
       <Source id="stops" type="geojson" data={stopsToGeoJSON(stops)}>

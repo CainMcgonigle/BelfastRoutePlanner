@@ -24,6 +24,7 @@ func main() {
 	r.Get("/api/stops", handlers.GetStops)
 	r.Get("/api/stops/{stopID}", handlers.GetStop)
 	r.Get("/api/routes", handlers.GetRoutes)
+	r.Get("/api/routes/geojson", handlers.GetRoutesGeoJSON)
 	r.Get("/api/plan", handlers.PlanTrip)
 
 	log.Println("backend running on :8081")

@@ -74,3 +74,11 @@ export async function getStop(stopId: string): Promise<Stop> {
   }
   return res.json() as Promise<Stop>
 }
+
+export async function getRoutesGeoJSON(): Promise<GeoJSON.FeatureCollection> {
+  const res = await fetch(`${API_BASE}/api/routes/geojson`)
+  if (!res.ok) {
+    throw new Error(`Routes GeoJSON request failed: ${res.status} ${res.statusText}`)
+  }
+  return res.json() as Promise<GeoJSON.FeatureCollection>
+}
