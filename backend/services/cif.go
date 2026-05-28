@@ -208,12 +208,12 @@ func GetCIFData() *CIFData {
 			}
 			return
 		}
-		osmPath := os.Getenv("OSM_STOPS_FILE")
-		if osmPath == "" {
-			osmPath = "../data/stops.json"
+		stopsFile := os.Getenv("STOPS_GEOJSON")
+		if stopsFile == "" {
+			stopsFile = "../data/translink-stops.geojson"
 		}
-		if _, err := os.Stat(osmPath); err == nil {
-			_ = EnrichStopsFromOSM(cifData, osmPath)
+		if _, err := os.Stat(stopsFile); err == nil {
+			_ = EnrichStopsFromGeoJSON(cifData, stopsFile)
 		}
 	})
 	return cifData

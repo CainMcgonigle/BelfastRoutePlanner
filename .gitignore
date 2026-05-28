@@ -5,9 +5,10 @@ backend/transit-ni
 *.test
 *.out
 
-# Data files (generated locally, not committed)
+# Data files (place manually, not committed)
 data/cif/*.cif
 data/stops.json
+data/translink-stops.geojson
 
 # OTP
 *.jar

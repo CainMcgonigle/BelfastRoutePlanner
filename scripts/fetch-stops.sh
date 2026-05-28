@@ -10,6 +10,11 @@ QUERY='[out:json][timeout:60];
 );
 out body;'
 
+ROUTES_OUT="$(cd "$(dirname "$0")/.." && pwd)/data/routes.json"
+ROUTES_QUERY='[out:json][timeout:90];
+rel["type"="route"]["route"="bus"]["operator"~"Translink|Metro|Ulsterbus"](54.0,-8.2,55.4,-5.4);
+out geom;'
+
 MIRRORS=(
   "https://overpass-api.de/api/interpreter"
   "https://overpass.kumi.systems/api/interpreter"
