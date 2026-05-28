@@ -4,7 +4,8 @@ import { useEffect, useState, useCallback } from 'react'
 import MapGL, { Source, Layer, Popup } from 'react-map-gl/maplibre'
 import type { RasterLayer, CircleLayer, MapMouseEvent } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
-import { getStops, getRoutesGeoJSON, getStop, type Stop } from '../lib/api'
+import { getStops, getRoutesGeoJSON, getStop, type Stop, type StopService } from '../lib/api'
+import { compressServices } from '../lib/compressServices'
 
 const BELFAST_CENTER = { latitude: 54.5973, longitude: -5.9301, zoom: 12 }
 
@@ -56,7 +57,7 @@ function stopsToGeoJSON(stops: Stop[]) {
   }
 }
 
-interface Service { lineId: string; description: string; operator: string }
+type Service = StopService
 
 interface PopupInfo {
   longitude: number
@@ -156,17 +157,17 @@ export default function Map() {
               <div>
                 <div style={{ fontSize: 11, color: '#64748b', marginBottom: 4 }}>Services</div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                  {popup.services.map((s, i) => (
-                    <span key={i} title={s.description} style={{
-                      background: s.operator === 'GDR' ? '#d1fae5' : '#dbeafe',
-                      color: s.operator === 'GDR' ? '#065f46' : '#1e40af',
+                  {compressServices(popup.services).map((b, i) => (
+                    <span key={i} title={b.description} style={{
+                      background: b.operator === 'GDR' ? '#d1fae5' : '#dbeafe',
+                      color: b.operator === 'GDR' ? '#065f46' : '#1e40af',
                       borderRadius: 4,
                       padding: '1px 6px',
                       fontSize: 12,
                       fontWeight: 600,
                       cursor: 'default',
                     }}>
-                      {OPERATOR_LABEL[s.operator] ?? s.operator} {s.lineId}
+                      {b.label}
                     </span>
                   ))}
                 </div>
