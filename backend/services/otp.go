@@ -5,9 +5,15 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"os"
 )
 
-const otpBase = "http://localhost:8080/otp/routers/default"
+func otpBaseURL() string {
+	if v := os.Getenv("OTP_BASE"); v != "" {
+		return v
+	}
+	return "http://localhost:8080/otp/routers/default"
+}
 
 type PlanRequest struct {
 	FromLat, FromLon float64
@@ -61,7 +67,7 @@ func PlanTrip(req PlanRequest) (*OTPResponse, error) {
 	params.Set("mode", "TRANSIT,WALK")
 	params.Set("numItineraries", "3")
 
-	resp, err := http.Get(otpBase + "/plan?" + params.Encode())
+	resp, err := http.Get(otpBaseURL() + "/plan?" + params.Encode())
 	if err != nil {
 		return nil, err
 	}

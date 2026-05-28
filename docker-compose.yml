@@ -1,0 +1,26 @@
+services:
+  otp:
+    image: docker.io/opentripplanner/opentripplanner:latest
+    volumes:
+      - ./otp/graphs/ni:/var/opentripplanner/graphs/ni
+    ports:
+      - "8080:8080"
+    command: ["--load", "--serve"]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/otp/routers/default"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"
+    depends_on:
+      otp:
+        condition: service_healthy
+    environment:
+      - OTP_BASE=http://otp:8080/otp/routers/default
