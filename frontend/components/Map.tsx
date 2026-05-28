@@ -4,13 +4,9 @@ import { useEffect, useState, useCallback } from 'react'
 import MapGL, { Source, Layer, Popup } from 'react-map-gl/maplibre'
 import type { RasterLayer, CircleLayer, MapMouseEvent } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
-import { getStops, getRoutesGeoJSON, type Stop } from '../lib/api'
+import { getStops, getRoutesGeoJSON, getStop, type Stop } from '../lib/api'
 
-const BELFAST_CENTER = {
-  latitude: 54.5973,
-  longitude: -5.9301,
-  zoom: 12,
-}
+const BELFAST_CENTER = { latitude: 54.5973, longitude: -5.9301, zoom: 12 }
 
 const osmLayer: RasterLayer = {
   id: 'osm-tiles',
@@ -25,7 +21,11 @@ const routeLineLayer = {
   type: 'line' as const,
   source: 'routes',
   paint: {
-    'line-color': '#3b82f6',
+    'line-color': [
+      'match', ['get', 'operator'],
+      'GDR', '#10b981',
+      '#3b82f6',
+    ],
     'line-width': ['interpolate', ['linear'], ['zoom'], 10, 1.5, 15, 3],
     'line-opacity': 0.7,
   },
@@ -56,11 +56,21 @@ function stopsToGeoJSON(stops: Stop[]) {
   }
 }
 
+interface Service { lineId: string; description: string; operator: string }
+
 interface PopupInfo {
   longitude: number
   latitude: number
   name: string
   atco: string
+  services: Service[] | null
+}
+
+const OPERATOR_LABEL: Record<string, string> = {
+  MET: 'Metro',
+  GDR: 'Glider',
+  ULB: 'Ulsterbus',
+  GLD: 'Goldliner',
 }
 
 export default function Map() {
@@ -81,12 +91,17 @@ export default function Map() {
     }
     const f = features[0]
     const [longitude, latitude] = (f.geometry as GeoJSON.Point).coordinates
-    setPopup({
-      longitude,
-      latitude,
-      name: f.properties?.name ?? f.properties?.atco,
-      atco: f.properties?.atco,
-    })
+    const atco: string = f.properties?.atco
+    const name: string = f.properties?.name ?? atco
+
+    setPopup({ longitude, latitude, name, atco, services: null })
+
+    getStop(atco).then(detail => {
+      setPopup(p => p?.atco === atco
+        ? { ...p, services: (detail as unknown as { services: Service[] }).services ?? [] }
+        : p
+      )
+    }).catch(console.error)
   }, [])
 
   return (
@@ -123,11 +138,40 @@ export default function Map() {
           anchor="bottom"
           onClose={() => setPopup(null)}
           closeButton
+          maxWidth="260px"
         >
-          <div style={{ color: '#0f172a', fontSize: 13, lineHeight: 1.5 }}>
-            <strong>{popup.name}</strong>
-            <br />
-            <span style={{ color: '#64748b', fontSize: 11 }}>{popup.atco}</span>
+          <div style={{ color: '#0f172a', fontSize: 13, lineHeight: 1.6, minWidth: 180 }}>
+            <div style={{ fontWeight: 600, marginBottom: 2 }}>{popup.name}</div>
+            <div style={{ color: '#64748b', fontSize: 11, marginBottom: 8 }}>{popup.atco}</div>
+
+            {popup.services === null && (
+              <div style={{ color: '#94a3b8', fontSize: 11 }}>Loading services…</div>
+            )}
+
+            {popup.services && popup.services.length === 0 && (
+              <div style={{ color: '#94a3b8', fontSize: 11 }}>No services found</div>
+            )}
+
+            {popup.services && popup.services.length > 0 && (
+              <div>
+                <div style={{ fontSize: 11, color: '#64748b', marginBottom: 4 }}>Services</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                  {popup.services.map((s, i) => (
+                    <span key={i} title={s.description} style={{
+                      background: s.operator === 'GDR' ? '#d1fae5' : '#dbeafe',
+                      color: s.operator === 'GDR' ? '#065f46' : '#1e40af',
+                      borderRadius: 4,
+                      padding: '1px 6px',
+                      fontSize: 12,
+                      fontWeight: 600,
+                      cursor: 'default',
+                    }}>
+                      {OPERATOR_LABEL[s.operator] ?? s.operator} {s.lineId}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </Popup>
       )}

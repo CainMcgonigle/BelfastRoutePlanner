@@ -67,12 +67,23 @@ export async function getStops(): Promise<Stop[]> {
   return res.json() as Promise<Stop[]>
 }
 
-export async function getStop(stopId: string): Promise<Stop> {
+export interface StopService {
+  lineId: string
+  description: string
+  operator: string
+  direction: string
+}
+
+export interface StopDetail extends Stop {
+  services: StopService[]
+}
+
+export async function getStop(stopId: string): Promise<StopDetail> {
   const res = await fetch(`${API_BASE}/api/stops/${encodeURIComponent(stopId)}`)
   if (!res.ok) {
     throw new Error(`Stop request failed: ${res.status} ${res.statusText}`)
   }
-  return res.json() as Promise<Stop>
+  return res.json() as Promise<StopDetail>
 }
 
 export async function getRoutesGeoJSON(): Promise<GeoJSON.FeatureCollection> {

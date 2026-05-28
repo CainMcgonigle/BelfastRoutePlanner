@@ -18,6 +18,11 @@ func GetStops(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(stops)
 }
 
+type stopDetail struct {
+	*services.CIFStop
+	Services []services.StopService `json:"services"`
+}
+
 func GetStop(w http.ResponseWriter, r *http.Request) {
 	stopID := chi.URLParam(r, "stopID")
 	data := services.GetCIFData()
@@ -26,8 +31,12 @@ func GetStop(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "stop not found", http.StatusNotFound)
 		return
 	}
+	services_ := data.StopRoutes[stopID]
+	if services_ == nil {
+		services_ = []services.StopService{}
+	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(stop)
+	json.NewEncoder(w).Encode(stopDetail{stop, services_})
 }
 
 func GetRoutes(w http.ResponseWriter, r *http.Request) {

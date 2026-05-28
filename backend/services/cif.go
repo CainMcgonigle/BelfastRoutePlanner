@@ -40,9 +40,17 @@ type CIFRoute struct {
 	Journeys    []CIFJourney `json:"journeys"`
 }
 
+type StopService struct {
+	LineID      string `json:"lineId"`
+	Description string `json:"description"`
+	Operator    string `json:"operator"`
+	Direction   string `json:"direction"`
+}
+
 type CIFData struct {
-	Routes map[string]*CIFRoute // keyed by "operator:lineID:direction"
-	Stops  map[string]*CIFStop  // keyed by ATCO code
+	Routes     map[string]*CIFRoute      // keyed by "operator:lineID:direction"
+	Stops      map[string]*CIFStop       // keyed by ATCO code
+	StopRoutes map[string][]StopService  // keyed by ATCO code
 }
 
 var (
@@ -52,8 +60,9 @@ var (
 
 func LoadCIFDir(dir string) (*CIFData, error) {
 	data := &CIFData{
-		Routes: make(map[string]*CIFRoute),
-		Stops:  make(map[string]*CIFStop),
+		Routes:     make(map[string]*CIFRoute),
+		Stops:      make(map[string]*CIFStop),
+		StopRoutes: make(map[string][]StopService),
 	}
 
 	files, err := filepath.Glob(filepath.Join(dir, "*.cif"))
@@ -67,7 +76,34 @@ func LoadCIFDir(dir string) (*CIFData, error) {
 		}
 	}
 
+	buildStopRoutes(data)
 	return data, nil
+}
+
+func buildStopRoutes(data *CIFData) {
+	// track which lineID+direction combos we've already added per stop to avoid duplicates
+	seen := make(map[string]map[string]bool) // atco -> set of "lineID:direction"
+
+	for _, route := range data.Routes {
+		for _, journey := range route.Journeys {
+			for _, st := range journey.StopTimes {
+				key := route.LineID + ":" + route.Direction
+				if seen[st.ATCO] == nil {
+					seen[st.ATCO] = make(map[string]bool)
+				}
+				if seen[st.ATCO][key] {
+					continue
+				}
+				seen[st.ATCO][key] = true
+				data.StopRoutes[st.ATCO] = append(data.StopRoutes[st.ATCO], StopService{
+					LineID:      strings.TrimSpace(route.LineID),
+					Description: route.Description,
+					Operator:    route.Operator,
+					Direction:   route.Direction,
+				})
+			}
+		}
+	}
 }
 
 func parseCIF(path string, data *CIFData) error {
