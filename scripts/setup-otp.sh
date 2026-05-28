@@ -14,18 +14,27 @@ mkdir -p "$GRAPH_DIR"
 # --- OTP jar ---
 if [ ! -f "$OTP_JAR" ]; then
     echo "Fetching latest OTP release URL..."
-    DOWNLOAD_URL=$(curl -s https://api.github.com/repos/opentripplanner/OpenTripPlanner/releases/latest \
-        | grep "browser_download_url" \
-        | grep "shaded.jar" \
-        | cut -d '"' -f 4)
+    API_RESPONSE=$(curl -s https://api.github.com/repos/opentripplanner/OpenTripPlanner/releases/latest)
+    DOWNLOAD_URL=$(echo "$API_RESPONSE" | grep "browser_download_url" | grep "shaded.jar" | cut -d '"' -f 4 || true)
 
     if [ -z "$DOWNLOAD_URL" ]; then
-        echo "ERROR: could not resolve OTP download URL. Check your internet connection."
-        exit 1
+        echo ""
+        echo "Could not auto-resolve OTP download URL."
+        echo "This is usually a GitHub API rate limit or asset naming change."
+        echo ""
+        echo "Get the latest shaded jar URL from:"
+        echo "  https://github.com/opentripplanner/OpenTripPlanner/releases/latest"
+        echo "Look for the file ending in '-shaded.jar'"
+        echo ""
+        read -rp "Paste the direct download URL for the OTP shaded jar: " DOWNLOAD_URL
+        if [ -z "$DOWNLOAD_URL" ]; then
+            echo "No URL provided, exiting."
+            exit 1
+        fi
     fi
 
     echo "Downloading OTP from $DOWNLOAD_URL ..."
-    curl -L -o "$OTP_JAR" "$DOWNLOAD_URL"
+    curl -L --progress-bar -o "$OTP_JAR" "$DOWNLOAD_URL"
     echo "OTP jar saved to $OTP_JAR"
 else
     echo "OTP jar already present, skipping."
@@ -34,7 +43,7 @@ fi
 # --- OSM data ---
 if [ ! -f "$OSM_FILE" ]; then
     echo "Downloading Northern Ireland OSM data..."
-    curl -L -o "$OSM_FILE" "$OSM_URL"
+    curl -L --progress-bar -o "$OSM_FILE" "$OSM_URL"
     echo "OSM data saved."
 else
     echo "OSM data already present, skipping."
