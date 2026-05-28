@@ -1,0 +1,23 @@
+# Go
+backend/vendor/
+*.exe
+*.test
+*.out
+
+# OTP
+graphs/
+*.jar
+*.osm.pbf
+*.gtfs.zip
+
+# Env
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
