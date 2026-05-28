@@ -5,8 +5,9 @@ backend/transit-ni
 *.test
 *.out
 
-# CIF timetable data (place files in data/cif/ manually)
+# Data files (generated locally, not committed)
 data/cif/*.cif
+data/stops.json
 
 # OTP
 *.jar

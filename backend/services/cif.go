@@ -206,6 +206,14 @@ func GetCIFData() *CIFData {
 				Routes: make(map[string]*CIFRoute),
 				Stops:  make(map[string]*CIFStop),
 			}
+			return
+		}
+		osmPath := os.Getenv("OSM_STOPS_FILE")
+		if osmPath == "" {
+			osmPath = "../data/stops.json"
+		}
+		if _, err := os.Stat(osmPath); err == nil {
+			_ = EnrichStopsFromOSM(cifData, osmPath)
 		}
 	})
 	return cifData
