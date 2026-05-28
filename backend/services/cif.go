@@ -9,35 +9,35 @@ import (
 )
 
 type CIFStop struct {
-	ATCO string
-	Name string  // populated from NaPTAN once available
-	Lat  float64 // populated from NaPTAN once available
-	Lon  float64 // populated from NaPTAN once available
+	ATCO string  `json:"atco"`
+	Name string  `json:"name"`
+	Lat  float64 `json:"lat"`
+	Lon  float64 `json:"lon"`
 }
 
 type CIFStopTime struct {
-	ATCO      string
-	Arrival   string // "HHMM"
-	Departure string // "HHMM"
+	ATCO      string `json:"atco"`
+	Arrival   string `json:"arrival"`
+	Departure string `json:"departure"`
 }
 
 type CIFJourney struct {
-	Operator   string
-	Code       string
-	RouteID    string
-	Direction  string
-	StartDate  string
-	EndDate    string
-	DaysOfWeek string // 7-char string "1111100" Mon=1 Sun=7
-	StopTimes  []CIFStopTime
+	Operator   string        `json:"operator"`
+	Code       string        `json:"code"`
+	RouteID    string        `json:"routeId"`
+	Direction  string        `json:"direction"`
+	StartDate  string        `json:"startDate"`
+	EndDate    string        `json:"endDate"`
+	DaysOfWeek string        `json:"daysOfWeek"`
+	StopTimes  []CIFStopTime `json:"stopTimes"`
 }
 
 type CIFRoute struct {
-	Operator    string
-	LineID      string
-	Direction   string
-	Description string
-	Journeys    []CIFJourney
+	Operator    string       `json:"operator"`
+	LineID      string       `json:"lineId"`
+	Direction   string       `json:"direction"`
+	Description string       `json:"description"`
+	Journeys    []CIFJourney `json:"journeys"`
 }
 
 type CIFData struct {
